@@ -1,0 +1,19 @@
+services:
+  auth:
+  
+  shopify:
+  
+  wallet:
+  
+  client:
+    build: ./client
+    ports:
+      - 3000:3000
+  
+  graphql:
+  
+  shopify_db:
+  
+  shipment_db:
+  
+  wallet_db:

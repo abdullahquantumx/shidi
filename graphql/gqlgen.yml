@@ -1,0 +1,14 @@
+schema:
+  - schema.graphql
+
+resolver:
+  layout: follow-schema
+  dir: generated
+
+model:
+  filename: models_gen.go
+
+# Direct package configuration
+exec:
+  filename: generated.go
+  package: main
