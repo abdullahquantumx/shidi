@@ -114,11 +114,11 @@ Each service requires specific environment variables. Refer to the [README.md](R
     Follow the steps in [Setup Instructions](#setup-instructions).
 
 3. **Access the Services**:
-    - Account: `http://localhost:3001`
-    - Shopify: `http://localhost:3002`
-    - Shipment: `http://localhost:3003`
-    - Payment: `http://localhost:3004`
-    - GraphQL Gateway: `http://localhost:4000`
+    - Account: `http://localhost:8081`
+    - Shopify: `http://localhost:8080`
+    - Shipment: `http://localhost:8082`
+    - Payment: `http://localhost:8083`
+    - GraphQL Gateway: `http://localhost:8084`
 
 ## GraphQL Interaction
 
