@@ -1,204 +1,259 @@
-# LogiLog
-Here’s the **`README.md`** code you can directly copy and customize for your project:
+Here’s a complete **README.md** file for your project in markdown format:
 
 ```markdown
-# **[Startup Name]**
+# Startup Project
 
-Welcome to the **[Startup Name]** repository! This document provides a detailed guide for setting up the development and staging environments, as well as general instructions for working on the project.
+This repository contains the codebase for a microservices-based startup project. It includes four microservices and a GraphQL gateway. Each service interacts with its own PostgreSQL database.
 
 ---
 
-## **Table of Contents**
+## Table of Contents
+
 1. [Project Overview](#project-overview)
-2. [Tech Stack](#tech-stack)
-3. [Folder Structure](#folder-structure)
-4. [Getting Started](#getting-started)
-5. [Development Setup](#development-setup)
-6. [Staging Setup](#staging-setup)
-7. [Deployment Flow](#deployment-flow)
-8. [Contributing](#contributing)
-9. [License](#license)
+2. [Requirements](#requirements)
+3. [Project Structure](#project-structure)
+4. [Setup Instructions](#setup-instructions)
+   - [Development Environment](#development-environment)
+   - [Staging Environment](#staging-environment)
+5. [Environment Variables](#environment-variables)
+6. [Running the Application](#running-the-application)
+7. [GraphQL Interaction](#graphql-interaction)
+8. [Database Management](#database-management)
+9. [Troubleshooting](#troubleshooting)
+10. [Contributing](#contributing)
 
 ---
 
-## **Project Overview**
+## Project Overview
 
-**[Provide a brief overview of your startup, the purpose of the project, and its key features.]**
+The project consists of the following components:
 
-Example:
-> **[Startup Name]** is a platform that simplifies **[business process or goal]** for **[target audience]**. Our product helps users achieve **[outcome/benefit]** with **[unique features].**
+1. **Account Service** (`account/`): Handles user authentication and account management.
+2. **Shopify Service** (`shopify/`): Integrates with the Shopify API for order management.
+3. **Shipment Service** (`shipment/`): Manages shipment processing and courier integrations.
+4. **Payment Service** (`payment/`): Handles payment processing and wallet management.
+5. **GraphQL Gateway** (`graphql/`): Acts as a single access point for querying and managing data from the microservices.
 
----
-
-## **Tech Stack**
-
-- **Frontend**: [React.js/Next.js/Vue.js]
-- **Backend**: [Golang/Node.js/Python]
-- **Database**: [PostgreSQL/MySQL/Firestore]
-- **Containerization**: Docker
-- **Orchestration**: Kubernetes
-- **CI/CD**: GitHub Actions/GitLab CI/Jenkins
-- **Cloud Provider**: [AWS/GCP/Azure]
+Each service is containerized and uses **PostgreSQL** as its database.
 
 ---
 
-## **Folder Structure**
+## Requirements
 
-**[Provide an overview of your project's folder structure.]**
+Make sure the following tools are installed:
 
-Example:
+- [Docker](https://www.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/)
+- [PostgreSQL](https://www.postgresql.org/)
+- [Go](https://golang.org/) (for backend services)
+- [Node.js](https://nodejs.org/) (for the GraphQL gateway)
+- [Git](https://git-scm.com/)
+
+---
+
+## Project Structure
+
 ```plaintext
-├── backend/            # Backend service
-│   ├── auth/           # Authentication service
-│   ├── shopify/        # Shopify service
-│   ├── wallet/         # Wallet service
-├── frontend/           # Frontend application
-│   ├── components/     # React/Next.js components
-│   ├── pages/          # Page routes
-├── scripts/            # Utility scripts for deployment and testing
-├── docker-compose.yml  # Docker Compose configuration
-├── README.md           # Project documentation
+root/
+├── account/       # User management service
+├── shopify/       # Shopify API integration service
+├── shipment/      # Shipment processing service
+├── payment/       # Payment and wallet service
+├── graphql/       # GraphQL gateway for microservices
 ```
 
 ---
 
-## **Getting Started**
+## Setup Instructions
 
-### Prerequisites
-1. Install [Docker](https://www.docker.com/).
-2. Install [Git](https://git-scm.com/).
-3. Install **[any other dependencies like Node.js or Golang]**.
+### Development Environment
 
-### Cloning the Repository
-```bash
-git clone https://github.com/[username]/[repository-name].git
-cd [repository-name]
-```
-
----
-
-## **Development Setup**
-
-### **Local Development**
-1. **Set up environment variables**:
-   - Create a `.env` file in the root directory.
-   - Example:
-     ```env
-     DB_HOST=localhost
-     DB_PORT=5432
-     DB_USER=dev_user
-     DB_PASSWORD=dev_password
-     ```
-
-2. **Run services using Docker**:
-   ```bash
-   docker-compose -f docker-compose.dev.yml up --build
-   ```
-
-3. **Access the application**:
-   - Frontend: [http://localhost:3000](http://localhost:3000)
-   - Backend APIs: [http://localhost:8080](http://localhost:8080)
-
-4. **Run tests**:
-   ```bash
-   npm test  # or go test ./...
-   ```
-
-### **Branching Strategy**
-- **Main**: Production-ready code.
-- **Staging**: Pre-production testing.
-- **Dev**: Active development and integration.
-
----
-
-## **Staging Setup**
-
-### **Staging Environment Configuration**
-1. **Server Details**:
-   - Hostname: `staging.yourdomain.com`
-   - Access: [SSH/Cloud Console link]
-   - **[Add instructions for accessing the staging environment.]**
+1. **Clone the repository**:
+    ```bash
+    git clone <repository-url>
+    cd <repository-folder>
+    ```
 
 2. **Environment Variables**:
-   - Set up `.env.staging` file:
-     ```env
-     DB_HOST=staging-db-host
-     DB_PORT=5432
-     DB_USER=staging_user
-     DB_PASSWORD=staging_password
-     API_KEY=staging-api-key
-     ```
+    Create `.env` files in the root directories of each microservice (`account`, `shopify`, `shipment`, `payment`, `graphql`). Refer to the [Environment Variables](#environment-variables) section for details.
 
-3. **Database**:
-   - **Host**: `staging-db-host`
-   - **Port**: `5432`
-   - **User**: `staging_user`
-   - **Password**: `staging_password`
+3. **Start PostgreSQL Containers**:
+    ```bash
+    docker-compose -f docker-compose.dev.yml up -d
+    ```
 
-### **Deploying to Staging**
-1. **Checkout the `staging` branch**:
-   ```bash
-   git checkout staging
-   ```
-
-2. **Push changes to remote**:
-   ```bash
-   git push origin staging
-   ```
-
-3. **CI/CD Deployment**:
-   - The CI/CD pipeline automatically deploys the latest code from the `staging` branch to the staging server.
-
-4. **Verify Deployment**:
-   - Frontend: [https://staging.yourdomain.com](https://staging.yourdomain.com)
-   - Backend APIs: [https://staging.yourdomain.com/api](https://staging.yourdomain.com/api)
+4. **Run Each Service**:
+    - For Go-based services:
+      ```bash
+      cd <service-folder>
+      go run main.go
+      ```
+    - For the GraphQL gateway:
+      ```bash
+      cd graphql
+      npm install
+      npm run dev
+      ```
 
 ---
 
-## **Deployment Flow**
+### Staging Environment
 
-### **Branch Merging**
-1. Development → Staging
-   ```bash
-   git checkout staging
-   git merge dev
-   git push origin staging
-   ```
+1. **Environment Variables**:
+    Use `.env.staging` files for staging credentials in each service.
 
-2. Staging → Production
-   ```bash
-   git checkout main
-   git merge staging
-   git push origin main
-   ```
+2. **Start PostgreSQL Containers**:
+    ```bash
+    docker-compose -f docker-compose.staging.yml up -d
+    ```
 
----
-
-## **Contributing**
-
-**[Provide instructions for contributors.]**
-
-Example:
-1. Fork the repository.
-2. Create a feature branch:
-   ```bash
-   git checkout -b feature/new-feature
-   ```
-3. Commit and push your changes.
-4. Open a Pull Request.
+3. **Run Services in Staging Mode**:
+    - For Go-based services:
+      ```bash
+      ENV=staging go run main.go
+      ```
+    - For the GraphQL gateway:
+      ```bash
+      npm run start-staging
+      ```
 
 ---
 
-## **License**
+## Environment Variables
 
-**[Include your project’s license details here.]**
+Each service requires specific environment variables. Here are examples:
 
----
+### Account Service (`account/.env`):
+```plaintext
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=account_db
+DB_USER=dev_user
+DB_PASSWORD=dev_password
 ```
 
-### Instructions:
-- Replace placeholders like `[Startup Name]`, `[business process or goal]`, and `[target audience]` with details about your project.
-- Update the folder structure to match your actual directory layout.
-- Replace the URLs, commands, and configurations with specifics for your setup.
+### Shopify Service (`shopify/.env`):
+```plaintext
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=shopify_db
+DB_USER=dev_user
+DB_PASSWORD=dev_password
+```
 
-Let me know if you'd like further customization!
+### Shipment Service (`shipment/.env`):
+```plaintext
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=shipment_db
+DB_USER=dev_user
+DB_PASSWORD=dev_password
+```
+
+### Payment Service (`payment/.env`):
+```plaintext
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=payment_db
+DB_USER=dev_user
+DB_PASSWORD=dev_password
+```
+
+### GraphQL Gateway (`graphql/.env`):
+```plaintext
+GRAPHQL_PORT=4000
+ACCOUNT_SERVICE_URL=http://localhost:3001
+SHOPIFY_SERVICE_URL=http://localhost:3002
+SHIPMENT_SERVICE_URL=http://localhost:3003
+PAYMENT_SERVICE_URL=http://localhost:3004
+```
+
+---
+
+## Running the Application
+
+1. **Start PostgreSQL Containers**:
+    ```bash
+    docker-compose up -d
+    ```
+
+2. **Run Each Service**:
+    Follow the steps in [Setup Instructions](#setup-instructions).
+
+3. **Access the Services**:
+    - Account: `http://localhost:3001`
+    - Shopify: `http://localhost:3002`
+    - Shipment: `http://localhost:3003`
+    - Payment: `http://localhost:3004`
+    - GraphQL Gateway: `http://localhost:4000`
+
+---
+
+## GraphQL Interaction
+
+The GraphQL gateway serves as a single access point for interacting with all microservices.
+
+### Example Query:
+Fetch orders:
+```graphql
+query GetOrders {
+  orders {
+    id
+    status
+    totalPrice
+  }
+}
+```
+
+### Example Mutation:
+Create an order:
+```graphql
+mutation CreateOrder($input: OrderInput!) {
+  createOrder(input: $input) {
+    id
+    status
+    totalPrice
+  }
+}
+```
+
+GraphQL resolves these queries and mutations by interacting with the appropriate microservices.
+
+---
+
+## Database Management
+
+- Development: `postgres://dev_user:dev_password@localhost:5432/{service_db}`
+- Staging: `postgres://staging_user:staging_password@staging_host:5432/{service_db}`
+
+Use tools like [pgAdmin](https://www.pgadmin.org/) or `psql` for database operations.
+
+---
+
+## Troubleshooting
+
+1. **Database Issues**:
+    - Verify PostgreSQL is running.
+    - Check `.env` or `.env.staging` files for correct credentials.
+
+2. **Service Connectivity**:
+    - Ensure the services are accessible at their specified ports.
+
+3. **GraphQL Gateway Errors**:
+    - Check microservices' URLs in `graphql/.env`.
+
+---
+
+## Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository.
+2. Create a branch for your feature or fix.
+3. Submit a pull request with a detailed explanation.
+
+For questions or issues, contact the maintainers.
+
+---
+
+This README provides all the necessary instructions for developers to set up and run the project locally. Let me know if you’d like to include additional sections!
