@@ -79,7 +79,7 @@ root/
     ```
 
 2. **Environment Variables**:
-    Create `.env` files in the root directories of each microservice (`account`, `shopify`, `shipment`, `payment`, `graphql`). Refer to the [Environment Variables](#environment-variables) section for details.
+    Create `.env.development` files in the root directories of each microservice (`account`, `shopify`, `shipment`, `payment`, `graphql`). Refer to the [Environment Variables](#environment-variables) section for details.
 
 3. **Start PostgreSQL Containers**:
     ```bash
