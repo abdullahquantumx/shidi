@@ -1,36 +1,20 @@
-# Build stage
-FROM golang:1.23-alpine3.18 AS build
+# Stage 1: Build the Go app
+FROM golang:1.23-alpine AS builder
+WORKDIR /app
 
-# Install necessary packages
-RUN apk --no-cache add gcc g++ make ca-certificates git
-
-# Set the working directory in the container
-WORKDIR /go/src/github.com/Shridhar2104/logilo
-
-# Copy go.mod and go.sum files and install dependencies
+# Copy go.mod and go.sum
 COPY go.mod go.sum ./
-RUN go mod tidy
+RUN go mod download
 
-# Copy the necessary application files
-COPY . .
+# Copy the entire project into the container
+COPY . ./ 
 
-# Build the Go application
-RUN GO111MODULE=on go build -o /go/bin/app ./shopify/cmd/shopify
+# Build the Go app from the correct location
+RUN GO111MODULE=on go build -o /app/shopify/shopify ./shopify/cmd/shopify
 
-# Runtime stage
-FROM alpine:3.18
-
-# Install necessary dependencies for running the Go app
+# Stage 2: Run the app
+FROM alpine:latest
 RUN apk --no-cache add ca-certificates
-
-# Set working directory
-WORKDIR /usr/bin
-
-# Copy the compiled binary from the build stage
-COPY --from=build /go/bin/app .
-
-# Expose the application port
-EXPOSE 8080
-
-# Command to run the Go application
-CMD ["./app"]
+COPY --from=builder /app/shopify /app/shopify
+RUN chmod +x /app/shopify/shopify
+CMD ["/app/shopify/shopify"]

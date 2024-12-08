@@ -4,16 +4,14 @@ import (
 	"log"
 	"net/http"
 
-
-	"github.com/99designs/gqlgen/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/99designs/gqlgen/handler"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type AppConfig struct {
-	AccountUrl string `env:"ACCOUNT_URL"`
-	OrderUrl   string `env:"ORDER_URL"`
-	ShipmentUrl string `env:"SHIPMENT_URL"`
-	WalletUrl   string `env:"WALLET_URL"`
+	AccountUrl string `envconfig:"ACCOUNT_URL"`
+	ShopifyUrl string `envconfig:"SHOPIFY_URL"`
 }
 
 func main() {
@@ -23,7 +21,7 @@ func main() {
 		log.Fatalf("Failed to parse environment variables: %v", err)
 	}
 
-	server, err := NewGraphQLServer(config.AccountUrl, config.OrderUrl, config.ShipmentUrl, config.WalletUrl)
+	server, err := NewGraphQLServer(config.AccountUrl, config.ShopifyUrl)
 	if err != nil {
 		log.Fatalf("Failed to create server: %v", err)
 	}
@@ -31,5 +29,5 @@ func main() {
 	http.Handle("/graphql", handler.GraphQL(server.ToNewExecutableSchema()))
 	http.Handle("/playground", playground.Handler("GraphQL playground", "/graphql"))
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8084", nil))
 }

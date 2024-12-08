@@ -4,17 +4,20 @@ package pb;
 
 option go_package = "/pb";
 
-message Order{
-
-    string id = 1;
-    string account_id = 2;
-    string shop_id = 3;
-    float total_price = 4;
-    string order_id = 5;
-
+// Represents detailed order information
+message Order {
+    string id = 1;                   // Unique internal identifier of the order
+    string account_id = 2;           // Associated account ID
+    string shop_id = 3;              // Shopify shop ID
+    float total_price = 4;           // Total order price
+    string order_id = 5;             // Shopify's native order ID
 }
 
-
+message OrderLineItem{
+    string product_id = 1;
+    string variant_id = 2;
+    int32 quantity = 3;
+}
 
 message SyncOrdersRequest{
 
@@ -34,14 +37,14 @@ message SyncOrdersResponse{
 message StoreTokenRequest{
     string shop_name = 1;
     string account_id = 2;
-    string token = 3;
 
 }
 
 message StoreTokenResponse{
+    string token = 1;
+} 
 
 
-}   
 message GetOrdersForShopAndAccountRequest{
     string shop_name = 1;
     string account_id = 2;
@@ -66,6 +69,95 @@ message UpdateOrderResponse{
 }
 
 
+// Represents shipping rate details
+message ShippingRate {
+    string courier_name = 1;         // Name of the courier service
+    float rate = 2;                  // Shipping rate cost
+    string estimated_delivery_time = 3; // Estimated delivery time
+    bool cod_supported = 4;          // COD support status
+}
+
+// Request to calculate shipping rates
+message CalculateShippingRatesRequest {
+    string order_id = 1;             // Order ID for which rates are being calculated
+    string from_pincode = 2;         // Origin pincode
+    string to_pincode = 3;           // Destination pincode
+    float weight = 4;                // Weight of the shipment
+    string account_id = 5;           // Associated account ID
+    string shop_name = 6;            // Shopify shop name
+}
+
+// Response with calculated shipping rates
+message CalculateShippingRatesResponse {
+    repeated ShippingRate rates = 1; // List of available shipping rates
+}
+
+// Request to fetch shipment details from Shopify
+message GetShipmentDetailsRequest {
+    string order_id = 1;             // Order ID to fetch shipment details
+    string account_id = 2;           // Associated account ID
+    string shop_name = 3;            // Shopify shop name
+}
+
+// Response with shipment details
+message GetShipmentDetailsResponse {
+    Shipment shipment = 1;           // Shipment details
+}
+
+// Shipment details for a specific order
+message Shipment {
+    string id = 1;                   // Shipment identifier
+    string order_id = 2;             // Associated order ID
+    string awb = 3;      // Tracking number for the shipment
+    string courier_name = 4;         // Name of the courier service
+    string status = 5;               // Shipment status
+    Address shipping_address = 6;    // Destination address
+}
+
+
+message ShipmentGraphqlRequest{
+    string order_id = 1;
+    string account_id = 2;
+    string courier_name = 3;
+}
+
+message ShipmentGraphqlResponse{
+    Shipment shipment = 1;
+}
+
+
+message CreateShipmentRequest{
+    string order_id = 1;
+    string account_id = 2;
+    string shop_name = 3;
+    string courier_name = 4;
+    string awb = 5;
+    string status = 6;
+    Address shipping_address = 7;
+    string from_pincode = 8;
+    string to_pincode = 9;
+    repeated OrderLineItem items = 10;
+}
+
+message CreateShipmentResponse{
+    Shipment shipment = 1;
+}
+
+
+
+// Address details
+message Address {
+    string name = 1;
+    string address1 = 2;
+    string address2 = 3;
+    string city = 4;
+    string province = 5;
+    string country = 6;
+    string postal_code = 7;
+    string phone = 8;
+}
+
+
 
 
 service ShopifyService{
@@ -73,6 +165,10 @@ service ShopifyService{
     rpc StoreToken(StoreTokenRequest) returns (StoreTokenResponse);
     rpc GetOrdersForShopAndAccount(GetOrdersForShopAndAccountRequest) returns (GetOrdersForShopAndAccountResponse);
     rpc UpdateOrder(UpdateOrderRequest) returns (UpdateOrderResponse);
+    rpc CalculateShippingRates(CalculateShippingRatesRequest) returns (CalculateShippingRatesResponse);
+    rpc GetShipmentDetails(GetShipmentDetailsRequest) returns (GetShipmentDetailsResponse);
+    rpc CreateShipment(CreateShipmentRequest) returns (CreateShipmentResponse);
+    rpc ShipmentGraphql(ShipmentGraphqlRequest) returns (ShipmentGraphqlResponse);
 
 }
 

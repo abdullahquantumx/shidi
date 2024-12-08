@@ -12,6 +12,7 @@ import (
 
 type Config struct {
 	DatabaseURL string `envconfig:"DATABASE_SHOPIFY_URL"`
+	
 }
 
 func main() {

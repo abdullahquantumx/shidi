@@ -1,21 +1,22 @@
 package main
 
+import (
+	"context"
+
+	"github.com/Shridhar2104/logilo/account"
+	"github.com/Shridhar2104/logilo/graphql/models"
+)
+
 type mutationResolver struct {
 	server *Server
 }
 
-// func (r *mutationResolver) CreateAccount(ctx context.Context, input CreateAccountInput) (*Account, error) {
-// 	return r.server.accountClient.CreateAccount(ctx, input)
-// }
 
-// func (r *mutationResolver) CreateOrder(ctx context.Context, input CreateOrderInput) (*Order, error) {
-// 	return r.server.orderClient.CreateOrder(ctx, input)
-// }
+func (r *mutationResolver) CreateAccount(ctx context.Context, input AccountInput) (*models.Account, error) {
+	res, err := r.server.accountClient.CreateAccount(ctx, &account.Account{Name: input.Name})
+	if err != nil {
+		return nil, err
+	}
+	return &models.Account{ID: res.ID, Name: res.Name}, nil
+}
 
-// func (r *mutationResolver) CreateShipment(ctx context.Context, input CreateShipmentInput) (*Shipment, error) {
-// 	return r.server.shipmentClient.CreateShipment(ctx, input)
-// }
-
-// func (r *mutationResolver) CreateWalletTransaction(ctx context.Context, input CreateWalletTransactionInput) (*WalletTransaction, error) {
-// 	return r.server.walletClient.CreateWalletTransaction(ctx, input)
-// }

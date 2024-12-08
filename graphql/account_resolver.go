@@ -1,21 +1,26 @@
 package main
 
-import "context"
+import (
+	"context"
+	"time"
+
+	"github.com/Shridhar2104/logilo/graphql/models"
+
+)
 
 type accountResolver struct {
 	server *Server
-
 }
 
-func (r *accountResolver) Orders(ctx context.Context, obj *Account) ([]*Order, error) {
-	// Extract account ID from the passed `obj` (Account).
-	accountID := obj.ID
+func (r *accountResolver) Orders(ctx context.Context, obj *models.Account) ([]*Order, error) {
 
-	// Call the orderClient to fetch the orders for the account.
-	orders, err := r.server.shopifyClient.GetOrders(ctx, accountID)
+	res, err := r.server.shopifyClient.GetOrdersForShopAndAccount(ctx, obj.ShopName, obj.ID)
 	if err != nil {
-		return nil, err // Return the error if the fetch fails.
+		return nil, err
 	}
-
-	return orders, nil // Return the fetched orders.
+	orders := make([]*Order, len(res))
+	for i, order := range res {
+		orders[i] = &Order{ID: order.ID, Amount: order.TotalPrice, CreatedAt: order.CreatedAt.Format(time.RFC3339)}
+	}
+	return orders, nil
 }
