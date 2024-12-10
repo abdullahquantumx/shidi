@@ -30,13 +30,14 @@ func NewClient(url string) (*Client, error) {
 
 func (c *Client) Close() {
 	c.conn.Close()
-	
+
 }
 
 func (c *Client) CreateAccount(ctx context.Context, a *Account) (*Account, error) {
 	res, err := c.service.CreateAccount(ctx, &pb.CreateAccountRequest{
 		Name: a.Name,
 	})
+	
 	if err != nil {
 		log.Printf("Error creating account: %v", err)
 		return nil, err
@@ -77,3 +78,4 @@ func (c *Client) ListAccounts(ctx context.Context, skip, take uint64) ([]Account
 		accounts[i] = Account{ID: uuid.MustParse(a.Id), Name: a.Name}
 	}
 	return accounts, nil
+}
