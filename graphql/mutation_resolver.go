@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"github.com/Shridhar2104/logilo/account"
 	"github.com/Shridhar2104/logilo/graphql/models"
@@ -13,10 +14,26 @@ type mutationResolver struct {
 
 
 func (r *mutationResolver) CreateAccount(ctx context.Context, input AccountInput) (*models.Account, error) {
-	res, err := r.server.accountClient.CreateAccount(ctx, &account.Account{Name: input.Name})
+
+	a:= &account.Account{
+		Name: input.Name,
+		Password: input.Password,
+		ShopName: input.ShopName,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		
+	}
+
+	res, err := r.server.accountClient.CreateAccount(ctx, a)
 	if err != nil {
 		return nil, err
 	}
-	return &models.Account{ID: res.ID, Name: res.Name}, nil
-}
 
+	return &models.Account{
+		ID: res.ID.String(),
+		Name: res.Name,
+		Password: res.Password,
+		ShopName: res.ShopName,
+		Orders: nil,
+	}, nil
+}

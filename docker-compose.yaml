@@ -1,17 +1,20 @@
 version: '3.8'
 services:
   shopify-db:
-    image: postgres:16
+    build: 
+      context: .
+      dockerfile: ./shopify/db.dockerfile
     env_file:
       - .env.development  # Ensure this file exists with DB credentials
     environment:
+      DATABASE_URL: ${DATABASE_SHOPIFY_URL}
       POSTGRES_USER: shopify_user_dev
       POSTGRES_PASSWORD: shopify_password_dev
       POSTGRES_DB: shopify_db_dev
     volumes:
       - shopify_postgres_data:/var/lib/postgresql/data
     networks:
-      - shopify-network
+      - logilo-network
     restart: always
 
   shopify-service:
@@ -23,22 +26,40 @@ services:
     depends_on:
       - shopify-db  # Ensure the DB is up before starting the service
     networks:
-      - shopify-network
+      - logilo-network
     ports:
       - "8080:8080"  # Adjust if your service runs on different ports
-    
+
+  graphql-service:
+    build:
+      context: .  # Path to your service's Go code
+      dockerfile: ./graphql/app.dockerfile
+    env_file:
+      - .env.development  # Make sure your environment variables are set
+    networks:
+      - logilo-network
+    ports:
+      - "8084:8084"  # Adjust if your service runs on different ports
+    restart: on-failure
+    depends_on:
+      - shopify-service
+      - account-service
+
   account-db:
-    image: postgres:16
+    build: 
+      context: .
+      dockerfile: ./account/db.dockerfile
     env_file:
       - .env.development  # Ensure this file exists with DB credentials
     environment:
+      DATABASE_URL: ${DATABASE_ACCOUNT_URL}
       POSTGRES_USER: account_user_dev
       POSTGRES_PASSWORD: account_password_dev
       POSTGRES_DB: account_db_dev
     volumes:
       - account_postgres_data:/var/lib/postgresql/data
     networks:
-      - shopify-network
+      - logilo-network
     restart: always
 
   account-service:
@@ -50,7 +71,7 @@ services:
     depends_on:
       - account-db  # Ensure the DB is up before starting the service
     networks:
-      - shopify-network
+      - logilo-network
     ports:
       - "8081:8081"  # Adjust if your service runs on different ports
 
@@ -59,5 +80,5 @@ volumes:
   shopify_postgres_data:
   account_postgres_data:
 networks:
-  shopify-network:
+  logilo-network:
     driver: bridge

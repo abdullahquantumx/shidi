@@ -8,15 +8,17 @@ import (
 )
 
 type Service interface {
-	CreateAccount(ctx context.Context, name string) (*Account, error)
+	CreateAccount(ctx context.Context, name string, password string, email string, shopName string) (*Account, error)
 	GetAccountByID(ctx context.Context, id string) (*Account, error)
 	ListAccounts(ctx context.Context, skip uint64, take uint64) ([]Account, error)
 }
 
 type Account struct {
-	ID        string `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	Name      string `json:"name"`
+	Password  string `json:"password"`
 	Email     string `json:"email"`
+	ShopName  string `json:"shopName"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -29,10 +31,13 @@ func NewAccountService(repo Repository) Service {
 	return &accountService{repo}
 }
 
-func (s *accountService) CreateAccount(ctx context.Context, name string) (*Account, error) {
+func (s *accountService) CreateAccount(ctx context.Context, name string, password string, email string, shopName string) (*Account, error) {
 	a := &Account{
-		ID:        uuid.New().String(),
+		ID:        uuid.New(),
 		Name:      name,
+		Password:  password,
+		Email:     email,
+		ShopName:  shopName,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -53,3 +58,4 @@ func (s *accountService) ListAccounts(ctx context.Context, skip uint64, take uin
 	}
 	return s.repo.ListAccounts(ctx, skip, take)
 }
+

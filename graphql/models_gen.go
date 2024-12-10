@@ -3,7 +3,9 @@
 package main
 
 type AccountInput struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	ShopName string `json:"shopName"`
 }
 
 type Accounts struct {

@@ -2,10 +2,12 @@ package account
 
 import (
 	"context"
+	"log"
+	"time"
 
 	"github.com/Shridhar2104/logilo/account/pb"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
-
 )
 
 type Client struct {
@@ -32,14 +34,18 @@ func (c *Client) CreateAccount(ctx context.Context, a *Account) (*Account, error
 		Name: a.Name,
 	})
 	if err != nil {
+		log.Printf("Error creating account: %v", err)
 		return nil, err
 	}
-
 	return &Account{
-		ID: res.Account.Id,
+		ID:   uuid.MustParse(res.Account.Id),
 		Name: res.Account.Name,
+		Password: res.Account.Password,
+		Email: res.Account.Email,
+		ShopName: res.Account.ShopName,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}, nil
-	
 }
 
 
@@ -50,7 +56,7 @@ func (c *Client) GetAccount(ctx context.Context, id string) (*Account, error) {
 	}
 
 	return &Account{
-		ID: res.Account.Id,
+		ID:   uuid.MustParse(res.Account.Id),
 		Name: res.Account.Name,
 	}, nil
 }
@@ -64,7 +70,7 @@ func (c *Client) ListAccounts(ctx context.Context, skip, take uint64) ([]Account
 
 	accounts := make([]Account, len(res.Accounts))
 	for i, a := range res.Accounts {
-		accounts[i] = Account{ID: a.Id, Name: a.Name}
+		accounts[i] = Account{ID: uuid.MustParse(a.Id), Name: a.Name}
 	}
 	return accounts, nil
 }

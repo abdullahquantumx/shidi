@@ -20,7 +20,7 @@ func (r *queryResolver) Accounts(ctx context.Context, pagination PaginationInput
 
 	accounts := make([]*models.Account, len(res))
 	for i, account := range res {
-		accounts[i] = &models.Account{ID: account.ID, Name: account.Name}
+		accounts[i] = &models.Account{ID: account.ID.String(), Name: account.Name}
 	}
 	return accounts, nil
 }

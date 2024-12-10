@@ -5,6 +5,7 @@ import "time"
 type Account struct {
 	ID string `json:"id"`
 	Name string `json:"name"`
+	Password string `json:"password"`
 	ShopName string `json:"shopName"`
 	Orders []Order `json:"orders"`
 }

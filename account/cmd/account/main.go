@@ -33,7 +33,10 @@ func main() {
 	})
 	defer r.Close()
 	log.Println("server starting on port 8081 ...")
+	  
 
 	s := account.NewAccountService(r)
 	log.Fatal(account.NewGRPCServer(s, 8081))
+
+	
 }
