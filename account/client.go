@@ -76,4 +76,3 @@ func (c *Client) ListAccounts(ctx context.Context, skip, take uint64) ([]Account
 		accounts[i] = Account{ID: uuid.MustParse(a.Id), Name: a.Name}
 	}
 	return accounts, nil
-}
