@@ -3,7 +3,7 @@ name: Docker Compose CI/CD
 on:
   push:
     branches: 
-      - staging
+      - main
 
 jobs:
 
