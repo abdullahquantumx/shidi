@@ -1,0 +1,36 @@
+name: Docker Compose CI/CD
+
+on:
+  push:
+    branches: 
+      - staging
+
+jobs:
+
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the repository
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Log in to Docker Hub (if needed for deployment)
+    - name: Log in to Docker Hub
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+
+    # Build and push the images using docker-compose
+    - name: Build and Push Docker Compose Services
+      run: |
+        docker-compose -f docker-compose.yaml build
+        docker-compose -f docker-compose.yaml push
+
+    # Deploy the services using docker-compose
+    - name: Deploy Services
+      run: |
+        docker-compose -f docker-compose.yaml pull
+        docker-compose -f docker-compose.yaml up -d --remove-orphans
