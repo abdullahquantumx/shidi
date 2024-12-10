@@ -30,7 +30,12 @@ jobs:
         sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         sudo chmod +x /usr/local/bin/docker-compose
 
-    # Build and push the images using docker-compose
+    # Build the Docker images using docker-compose
+    - name: Build Docker Compose Services
+      run: |
+        docker-compose -f docker-compose.yaml build
+
+    # Tag and push the images to Docker Hub
     - name: Build and Push Docker Compose Services
       run: |
         services=$(docker-compose -f docker-compose.yaml config --services)
