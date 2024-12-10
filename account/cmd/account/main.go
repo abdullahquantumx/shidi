@@ -11,7 +11,7 @@ import (
 )
 
 type Config struct {
-	DatabaseURL string `envconfig:"DATABASE_URL"`
+	DatabaseURL string `envconfig:"DATABASE_ACCOUNT_URL"`
 }
 
 func main() {
@@ -32,8 +32,11 @@ func main() {
 		return nil
 	})
 	defer r.Close()
-	log.Println("server starting on port 8080 ...")
+	log.Println("server starting on port 8081 ...")
+	  
 
 	s := account.NewAccountService(r)
-	log.Fatal(account.NewGRPCServer(s, 8080))
+	log.Fatal(account.NewGRPCServer(s, 8081))
+
+	
 }

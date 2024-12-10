@@ -4,129 +4,80 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"time"
 
-	"github.com/Shridhar2104/logilo/shopify/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"github.com/Shridhar2104/logilo/shopify/pb"
 )
-
 type grpcServer struct {
 	pb.UnimplementedShopifyServiceServer
 	service Service
 }
 
-// NewGRPCServer initializes and starts a new gRPC server
 func NewGRPCServer(service Service, port int) error {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		return fmt.Errorf("failed to listen on port %d: %w", port, err)
+		return err
 	}
 
 	server := grpc.NewServer()
 	pb.RegisterShopifyServiceServer(server, &grpcServer{
+		UnimplementedShopifyServiceServer: pb.UnimplementedShopifyServiceServer{}, // Add this
 		service: service,
 	})
 	reflection.Register(server)
-
-	fmt.Printf("gRPC server started on port %d\n", port)
 	return server.Serve(lis)
 }
 
-// CreateOrder handles the gRPC call to create an order
-func (s *grpcServer) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
-	order := &Order{
-		ID:        r.Order.Id,
-		AccountID: r.Order.AccountID,
-		Phase:     r.Order.Phase,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
+func (s *grpcServer) SyncOrders(ctx context.Context, r *pb.SyncOrdersRequest) (*pb.SyncOrdersResponse, error) {
 
-	err := s.service.CreateOrder(ctx, order)
+	err := s.service.SyncOrders(ctx, r.ShopName, r.SinceId, int(r.Limit), r.Token)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create order: %w", err)
+		return nil, err
 	}
+	return &pb.SyncOrdersResponse{}, nil
 
-	return &pb.CreateOrderResponse{
-		Order: &pb.Order{
+
+}
+func (s *grpcServer) GetOrdersForShopAndAccount(ctx context.Context, r *pb.GetOrdersForShopAndAccountRequest) (*pb.GetOrdersForShopAndAccountResponse, error){
+	orders, err := s.service.GetOrdersForShopAndAccount(ctx, r.ShopName, r.AccountId)
+	if err != nil {
+		return nil, err
+	}
+	ordersPb := make([]*pb.Order, len(orders))
+	for i, order := range orders {
+		ordersPb[i] = &pb.Order{
 			Id: order.ID,
-		},
+			AccountId: order.AccountId,
+			ShopId: order.ShopName,
+			TotalPrice: float32(order.TotalPrice),
+			OrderId: order.OrderId,
+		}
+	}
+	return &pb.GetOrdersForShopAndAccountResponse{
+		Orders: ordersPb,
 	}, nil
+
 }
+func (s *grpcServer) UpdateOrder(ctx context.Context, r *pb.UpdateOrderRequest) (*pb.UpdateOrderResponse, error){
 
-// GetOrderByID handles the gRPC call to get an order by its ID
-func (s *grpcServer) GetOrderByID(ctx context.Context, r *pb.GetOrderByIDRequest) (*pb.GetOrderByIDResponse, error) {
-	order, err := s.service.GetOrderByID(ctx, r.Id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get order by ID: %w", err)
-	}
-
-	return &pb.GetOrderByIDResponse{
-		Order: &pb.Order{
-			Id:        order.ID,
-			AccountID: order.AccountID,
-			CreatedAt: order.CreatedAt.Format(time.RFC3339),
-			UpdatedAt: order.UpdatedAt.Format(time.RFC3339),
-			Phase:     order.Phase,
-		},
-	}, nil
-}
-
-// ListOrders handles the gRPC call to list orders
-func (s *grpcServer) ListOrders(ctx context.Context, r *pb.ListOrdersRequest) (*pb.ListOrdersResponse, error) {
-
-	var res []*Order
-	var err error
-	if r.Query != "" {
-		res, err = s.service.SearchOrders(ctx, r.Query, r.Skip, r.Take)
-	} else if r.Ids != nil {
-		res, err = s.service.GetOrdersByIDs(ctx, r.Ids)
-	} else {
-		res, err = s.service.ListOrders(ctx, r.Skip, r.Take)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to list orders: %w", err)
-	}
-
-	orders := []*pb.Order{}
-	for _, order := range res {
-		orders = append(orders, &pb.Order{
-			Id:        order.ID,
-			AccountID: order.AccountID,
-			CreatedAt: order.CreatedAt.Format(time.RFC3339),
-			UpdatedAt: order.UpdatedAt.Format(time.RFC3339),
-			Phase:     order.Phase,
-		})
-	}
-
-	return &pb.ListOrdersResponse{
-		Orders: orders,
-	}, nil
-}
-
-// UpdateOrder handles the gRPC call to update an order
-func (s *grpcServer) UpdateOrder(ctx context.Context, r *pb.UpdateOrderRequest) (*pb.UpdateOrderResponse, error) {
 	order := &Order{
-		ID:        r.Order.Id,
-		AccountID: r.Order.AccountID,
-		Phase:     r.Order.Phase,
-		UpdatedAt: time.Now(),
+		ID: r.Order.Id,
+		ShopName: r.ShopName,
+		AccountId: r.AccountId,
+		TotalPrice: float64(r.Order.TotalPrice),
 	}
-
-	updatedOrder, err := s.service.UpdateOrder(ctx, order)
+	err := s.service.UpdateOrder(ctx, *order, r.AccountId, r.ShopName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update order: %w", err)
+		return nil, err
 	}
+	return &pb.UpdateOrderResponse{}, nil
 
-	return &pb.UpdateOrderResponse{
-		Order: &pb.Order{
-			Id:        updatedOrder.ID,
-			AccountID: updatedOrder.AccountID,
-			CreatedAt: updatedOrder.CreatedAt.Format(time.RFC3339),
-			UpdatedAt: updatedOrder.UpdatedAt.Format(time.RFC3339),
-			Phase:     updatedOrder.Phase,
-		},
-	}, nil
 }
+func (s *grpcServer) StoreToken(ctx context.Context, r *pb.StoreTokenRequest) (*pb.StoreTokenResponse, error){
+	err := s.service.StoreToken(ctx, r.ShopName, r.AccountId, r.Token)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.StoreTokenResponse{}, nil
+}	

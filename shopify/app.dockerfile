@@ -1,13 +1,20 @@
-FROM golang:1.13-alpine3.11 AS build
-RUN apk --no-cache add gcc g++ make ca-certificates
-WORKDIR /go/src/github.com/Shridhar2104/logilo
-COPY go.mod go.sum ./
-COPY vendor vendor
-COPY shopify shopify
-RUN GO111MODULE=on go build -mod vendor -o /go/bin/app ./shopify/cmd/shopify
+# Stage 1: Build the Go app
+FROM golang:1.23-alpine AS builder
+WORKDIR /app
 
-FROM alpine:3.11
-WORKDIR /usr/bin
-COPY --from=build /go/bin .
-EXPOSE 8080
-CMD ["app"]
+# Copy go.mod and go.sum
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the entire project into the container
+COPY . ./ 
+
+# Build the Go app from the correct location
+RUN GO111MODULE=on go build -o /app/shopify/shopify ./shopify/cmd/shopify
+
+# Stage 2: Run the app
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+COPY --from=builder /app/shopify /app/shopify
+RUN chmod +x /app/shopify/shopify
+CMD ["/app/shopify/shopify"]

@@ -34,7 +34,7 @@ func (r *postgresRepository) Close() {
 }
 
 func (r *postgresRepository) PutAccount(ctx context.Context, account Account) error {
-	_, err := r.db.ExecContext(ctx, "INSERT INTO accounts (id, name, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)", account.ID, account.Name, account.Email, account.CreatedAt, account.UpdatedAt)
+	_, err := r.db.ExecContext(ctx, "INSERT INTO accounts (id, name, email, password, shop_name, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)", account.ID, account.Name, account.Email, account.Password, account.ShopName, account.CreatedAt, account.UpdatedAt)
 	return err
 }
 

@@ -2,198 +2,159 @@ package shopify
 
 import (
 	"context"
-	"encoding/json"
-	"time"
-
-	"github.com/olivere/elastic/v7"
-	"github.com/Shridhar2104/logilo/shopify/pb"
+	"database/sql"
+	_ "github.com/lib/pq"
 )
 
-// Order defines the structure of an order in the system.
-type Order struct {
-	ID        string    `json:"id"`
-	AccountID string    `json:"account_id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Phase     string    `json:"phase"`
-}
 
-// Repository defines the methods to interact with the order storage.
 type Repository interface {
-	Close()
-	CreateOrder(ctx context.Context, order *Order) error
-	GetOrderByID(ctx context.Context, orderID string) (*Order, error)
-	GetOrdersByIDs(ctx context.Context, orderIDs []string) ([]*Order, error)
-	UpdateOrder(ctx context.Context, order *Order) (*Order, error)
-	DeleteOrder(ctx context.Context, orderID string) error
-	FetchOrders(ctx context.Context, request *pb.FetchOrdersRequest) (*pb.FetchOrdersResponse, error)
-	ListOrders(ctx context.Context, skip, take int) ([]*Order, error)
-	SearchOrders(ctx context.Context, query string, skip, take int) ([]*Order, error)
+	Close() 
+	PutOrder(ctx context.Context, order Order) error
+	GetOrdersForShopAndAccount(ctx context.Context, shopName string, accountId string) ([]Order, error)
+	SyncOrders(ctx context.Context, shopName string, sinceId string, limit int, token string) ([]Order, error)
+	UpdateOrder(ctx context.Context, order Order, accountId string, shopName string) error	
+	StoreToken(ctx context.Context, shopName string, accountId string, token string) error
+
 }
 
-// elasticSearchRepository is an implementation of Repository using Elasticsearch.
-type elasticSearchRepository struct {
-	client *elastic.Client
+type postgresRepository struct{
+	db *sql.DB
 }
 
-// NewElasticSearchRepository initializes a new Elasticsearch repository.
-func NewElasticSearchRepository(url string) (*elasticSearchRepository, error) {
-	client, err := elastic.NewClient(
-		elastic.SetURL(url),
-		elastic.SetSniff(false),
+
+func NewPostgresRepository(url string) (*postgresRepository, error) {
+	db, err:= sql.Open("postgres", url)
+	if err!= nil{
+		return nil, err
+	}
+
+	err = db.Ping()
+	if err!= nil{
+		return nil, err
+	}
+	return &postgresRepository{db: db}, nil
+}
+
+func (r *postgresRepository) PutOrder(ctx context.Context, order Order) error{
+
+	tx, err:= r.db.BeginTx(ctx, nil)
+	if err!= nil{
+		return err
+	}
+	defer func(){
+		if err!= nil{
+			tx.Rollback()
+			return 
+		}
+		err = tx.Commit()
+
+	}()
+	tx.ExecContext(
+		ctx,
+		`INSERT INTO orders (id, created_at, updated_at, shop_name, account_id, order_id, total_price) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		order.ID, order.CreatedAt, order.UpdatedAt, order.ShopName, order.AccountId, order.OrderId, order.TotalPrice,
+	)
+	if err!= nil{
+		return err
+	}
+
+	return nil
+
+
+}
+
+
+func (r *postgresRepository) GetOrdersForShopAndAccount(ctx context.Context, shopName string, accountId string) ([]Order, error) {
+	rows, err := r.db.QueryContext(
+		ctx,
+		`SELECT id, created_at, updated_at, shop_name, account_id, order_id, total_price 
+		FROM orders WHERE shop_name = $1 AND account_id = $2`,
+		shopName, accountId,
 	)
 	if err != nil {
 		return nil, err
 	}
-	return &elasticSearchRepository{client: client}, nil
-}
+	defer rows.Close()
 
-// CreateOrder adds a new order to Elasticsearch.
-func (r *elasticSearchRepository) CreateOrder(ctx context.Context, order *Order) error {
-	_, err := r.client.Index().
-		Index("orders").
-		Id(order.ID).
-		BodyJson(order).
-		Do(ctx)
-	return err
-}
-
-// GetOrderByID retrieves an order by its ID.
-func (r *elasticSearchRepository) GetOrderByID(ctx context.Context, orderID string) (*Order, error) {
-	res, err := r.client.Get().
-		Index("orders").
-		Id(orderID).
-		Do(ctx)
-	if elastic.IsNotFound(err) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	var order Order
-	err = json.Unmarshal(res.Source, &order)
-	return &order, err
-}
-
-// GetOrdersByIDs retrieves multiple orders by their IDs
-func (r *elasticSearchRepository) GetOrdersByIDs(ctx context.Context, orderIDs []string) ([]*Order, error) {
-	// If no IDs are provided, return an empty slice
-	if len(orderIDs) == 0 {
-		return []*Order{}, nil
-	}
-
-	// Create a multi-get request
-	multiGet := r.client.MultiGet()
-
-	// Add each order ID to the multi-get request
-	for _, orderID := range orderIDs {
-		multiGet = multiGet.Add(elastic.NewMultiGetItem().
-			Index("orders").
-			Id(orderID))
-	}
-
-	// Execute the multi-get request
-	res, err := multiGet.Do(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// Slice to store retrieved orders
-	orders := make([]*Order, 0, len(orderIDs))
-
-	// Process each retrieved item
-	for _, item := range res.Docs {
-		// Skip items that weren't found or have errors
-		if !item.Found || item.Source == nil {
-			continue
-		}
-
-		// Unmarshal the individual order
+	var orders []Order
+	for rows.Next() {
 		var order Order
-		if err := json.Unmarshal(item.Source, &order); err != nil {
-			// Log the error or handle it as needed
-			// For this implementation, we'll skip the order if unmarshaling fails
-			continue
-		}
-
-		orders = append(orders, &order)
-	}
-
-	return orders, nil
-}
-
-// UpdateOrder updates an existing order.
-func (r *elasticSearchRepository) UpdateOrder(ctx context.Context, order *Order) (*Order, error) {
-	_, err := r.client.Update().
-		Index("orders").
-		Id(order.ID).
-		Doc(order).
-		Do(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return order, nil
-}
-
-// DeleteOrder removes an order by its ID.
-func (r *elasticSearchRepository) DeleteOrder(ctx context.Context, orderID string) error {
-	_, err := r.client.Delete().
-		Index("orders").
-		Id(orderID).
-		Do(ctx)
-	return err
-}
-
-// ListOrders retrieves a paginated list of orders.
-func (r *elasticSearchRepository) ListOrders(ctx context.Context, skip, take int) ([]*Order, error) {
-	res, err := r.client.Search().
-		Index("orders").
-		Query(elastic.NewMatchAllQuery()).
-		From(skip).
-		Size(take).
-		Do(ctx)
-	if err != nil {
-		return nil, err
-	}
-	orders := make([]*Order, len(res.Hits.Hits))
-	for i, hit := range res.Hits.Hits {
-		var order Order
-		err := json.Unmarshal(hit.Source, &order)
-		if err != nil {
+		if err := rows.Scan(&order.ID, &order.CreatedAt, &order.UpdatedAt, &order.ShopName, &order.AccountId, &order.OrderId, &order.TotalPrice); err != nil {
 			return nil, err
 		}
-		orders[i] = &order
+		orders = append(orders, order)
 	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return orders, nil
 }
 
-// SearchOrders searches for orders by a query string.
-func (r *elasticSearchRepository) SearchOrders(ctx context.Context, query string, skip, take int) ([]*Order, error) {
-	multiMatchQuery := elastic.NewMultiMatchQuery(query, "id", "account_id").
-		Type("best_fields")
 
-	res, err := r.client.Search().
-		Index("orders").
-		Query(multiMatchQuery).
-		From(skip).
-		Size(take).
-		Do(ctx)
+func (r *postgresRepository) SyncOrders(ctx context.Context, shopName string, sinceId string, limit int, token string) ([]Order, error) {
+	// Placeholder for the actual syncing logic with Shopify or other external systems.
+	// Here we query orders based on the `sinceId` and `limit` to fetch a subset of orders.
+
+	rows, err := r.db.QueryContext(
+		ctx,
+		`SELECT id, created_at, updated_at, shop_name, account_id, order_id, total_price 
+		FROM orders WHERE shop_name = $1 AND id > $2 LIMIT $3`,
+		shopName, sinceId, limit,
+	)
 	if err != nil {
 		return nil, err
 	}
-	orders := make([]*Order, len(res.Hits.Hits))
-	for i, hit := range res.Hits.Hits {
+	defer rows.Close()
+
+	var orders []Order
+	for rows.Next() {
 		var order Order
-		err := json.Unmarshal(hit.Source, &order)
-		if err != nil {
+		if err := rows.Scan(&order.ID, &order.CreatedAt, &order.UpdatedAt, &order.ShopName, &order.AccountId, &order.OrderId, &order.TotalPrice); err != nil {
 			return nil, err
 		}
-		orders[i] = &order
+		orders = append(orders, order)
 	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return orders, nil
 }
 
-// Close gracefully closes the Elasticsearch client.
-func (r *elasticSearchRepository) Close() {
-	r.client.Stop()
+
+func (r *postgresRepository) UpdateOrder(ctx context.Context, order Order, accountId string, shopName string) error {
+	// Update order details like `updated_at` and `total_price`.
+	_, err := r.db.ExecContext(
+		ctx,
+		`UPDATE orders SET updated_at = $1, total_price = $2 WHERE order_id = $3 AND account_id = $4 AND shop_name = $5`,
+		order.UpdatedAt, order.TotalPrice, order.OrderId, accountId, shopName,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *postgresRepository) StoreToken(ctx context.Context, shopName string, accountId string, token string) error {
+	// Store or update the token for the shop and account.
+	_, err := r.db.ExecContext(
+		ctx,
+		`INSERT INTO tokens (shop_name, account_id, token) 
+		VALUES ($1, $2, $3) 
+		ON CONFLICT (shop_name, account_id) 
+		DO UPDATE SET token = $3`,
+		shopName, accountId, token,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+
+func (r *postgresRepository) Close() {
+	r.db.Close()
 }
