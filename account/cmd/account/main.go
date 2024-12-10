@@ -12,7 +12,7 @@ import (
 
 type Config struct {
 	DatabaseURL string `envconfig:"DATABASE_ACCOUNT_URL"`
-	
+
 }
 
 func main() {
@@ -20,6 +20,7 @@ func main() {
 	var cfg Config
 	if err := envconfig.Process("", &cfg); err != nil {
 		log.Fatalf("Failed to process environment variables: %v", err)
+		
 	}
 
 	var r account.Repository
