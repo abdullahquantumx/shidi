@@ -20,10 +20,11 @@ func NewClient(url string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 
 	c:= pb.NewAccountServiceClient(conn)
 	return &Client{conn: conn, service: c}, nil
+	
 }
 
 func (c *Client) Close() {
