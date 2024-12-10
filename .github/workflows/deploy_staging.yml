@@ -1,0 +1,63 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Build and push Docker images
+      - name: Build and Push Shopify Service
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/shopify-service:staging ./shopify
+          docker push ${{ secrets.DOCKER_USERNAME }}/shopify-service:staging
+          
+      - name: Build and Push GraphQL Service
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/graphql-service:staging ./graphql
+          docker push ${{ secrets.DOCKER_USERNAME }}/graphql-service:staging
+          
+      - name: Build and Push Account Service
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/account-service:staging ./account
+          docker push ${{ secrets.DOCKER_USERNAME }}/account-service:staging
+      # Copy docker-compose file to GCP instance
+      - name: Copy docker-compose.yml to GCP Instance
+        uses: appleboy/ssh-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_IP }}  # GCP instance IP
+          username: ${{ secrets.SERVER_USER }}  # SSH username for your GCP instance
+          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}  # SSH private key secret
+          source: "./docker-compose.yml"  # Local docker-compose file
+          target: "/path/to/your/remote/directory/docker-compose.yml"  # Remote directory to place it
+
+      # SSH into GCP instance and run docker-compose to deploy
+      - name: Deploy on GCP Instance
+        uses: appleboy/ssh-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+          script: |
+            cd /path/to/your/remote/directory
+            docker-compose pull  # Pull updated images from Docker Hub
+            docker-compose up -d  # Deploy containers in detached mode
