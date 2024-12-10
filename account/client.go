@@ -24,12 +24,13 @@ func NewClient(url string) (*Client, error) {
 
 	c:= pb.NewAccountServiceClient(conn)
 	return &Client{conn: conn, service: c}, nil
-	
+
 
 }
 
 func (c *Client) Close() {
 	c.conn.Close()
+	
 }
 
 func (c *Client) CreateAccount(ctx context.Context, a *Account) (*Account, error) {
@@ -76,3 +77,4 @@ func (c *Client) ListAccounts(ctx context.Context, skip, take uint64) ([]Account
 		accounts[i] = Account{ID: uuid.MustParse(a.Id), Name: a.Name}
 	}
 	return accounts, nil
+}
