@@ -4,10 +4,8 @@ services:
     build: 
       context: .
       dockerfile: ./shopify/db.dockerfile
-    env_file:
-      - .env.staging  # Ensure this file exists with DB credentials
     environment:
-      DATABASE_URL: ${DATABASE_SHOPIFY_URL}
+      DATABASE_URL: postgres://shopify_user_dev:shopify_password_dev@shopify-db:5432/shopify_db_dev?sslmode=disable
       POSTGRES_USER: shopify_user_dev
       POSTGRES_PASSWORD: shopify_password_dev
       POSTGRES_DB: shopify_db_dev
@@ -21,8 +19,6 @@ services:
     build:
       context: .  # Path to your service's Go code
       dockerfile: ./shopify/app.dockerfile
-    env_file:
-      - .env.staging  # Make sure your environment variables are set
     depends_on:
       - shopify-db  # Ensure the DB is up before starting the service
     networks:
@@ -34,8 +30,9 @@ services:
     build:
       context: .  # Path to your service's Go code
       dockerfile: ./graphql/app.dockerfile
-    env_file:
-      - .env.staging  # Make sure your environment variables are set
+    environment:
+      - ACCOUNT_URL=localhost:8081
+      - SHOPFY_URL=localhost:8080
     networks:
       - logilo-network
     ports:
@@ -49,10 +46,8 @@ services:
     build: 
       context: .
       dockerfile: ./account/db.dockerfile
-    env_file:
-      - .env.staging  # Ensure this file exists with DB credentials
     environment:
-      DATABASE_URL: ${DATABASE_ACCOUNT_URL}
+      DATABASE_URL: postgres://account_user_dev:account_password_dev@account-db:5432/account_db_dev?sslmode=disable
       POSTGRES_USER: account_user_dev
       POSTGRES_PASSWORD: account_password_dev
       POSTGRES_DB: account_db_dev
@@ -66,8 +61,6 @@ services:
     build:
       context: .  # Path to your service's Go code
       dockerfile: ./account/app.dockerfile
-    env_file:
-      - .env.staging  # Make sure your environment variables are set
     depends_on:
       - account-db  # Ensure the DB is up before starting the service
     networks:
