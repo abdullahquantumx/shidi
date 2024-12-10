@@ -1,0 +1,61 @@
+scalar DateTime
+
+type Account {
+	id: String!
+	name: String!
+    password: String!
+    shopName: String!
+    orders: [Order!]!
+}
+
+type OrderLineItem {
+	id: String!
+	amount: Float!
+    description: String!
+}
+
+type Order {
+	id: String!
+	amount: Float!
+    accountId: String!
+	createdAt: DateTime!
+    description: String!
+    lineItems: [OrderLineItem!]!
+}
+
+
+
+input PaginationInput {
+    skip: Int!
+    take: Int!
+}
+
+
+input AccountInput {
+    name: String!
+    password: String!
+    shopName: String!
+}
+
+input OrderLineItemInput {
+    id: String!
+    amount: Float!
+    description: String!
+}
+
+input OrderInput {
+    accountId: String!
+    lineItems: [OrderLineItemInput!]!
+}
+
+type Mutation {
+    createAccount(Account: AccountInput!): Account!
+}
+
+type Query {
+    accounts(pagination: PaginationInput!): [Account!]!
+} 
+
+type Accounts {
+    orders(pagination: PaginationInput!): [Order!]!
+}
