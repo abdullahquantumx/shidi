@@ -12,8 +12,6 @@ import (
 
 type Config struct {
 	DatabaseURL string `envconfig:"DATABASE_ACCOUNT_URL"`
-	
-
 }
 
 func main() {
