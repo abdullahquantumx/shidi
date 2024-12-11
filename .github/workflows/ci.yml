@@ -28,32 +28,31 @@ jobs:
       # Build and push each service
       - name: Build and Push Docker Services
         run: |
-          # List of services to build and push
-          services=(
-            "shopify-db:./shopify/db.dockerfile"
-            "shopify-service:./shopify/app.dockerfile"
-            "graphql-service:./graphql/app.dockerfile"
-            "account-db:./account/db.dockerfile"
-            "account-service:./account/app.dockerfile"
-          )
-          
           # Get current git commit short hash for tagging
           COMMIT_SHORT_SHA=$(git rev-parse --short HEAD)
           
+          # Define services and their corresponding Dockerfiles
+          declare -A SERVICES=(
+            ["shopify-db"]="./shopify/db.dockerfile"
+            ["shopify-service"]="./shopify/app.dockerfile"
+            ["graphql-service"]="./graphql/app.dockerfile"
+            ["account-db"]="./account/db.dockerfile"
+            ["account-service"]="./account/app.dockerfile"
+          )
+          
           # Build and push each service
-          for service_info in "${services[@]}"; do
-            # Split service name and dockerfile path
-            IFS=':' read -r service dockerfile <<< "$service_info"
+          for SERVICE in "${!SERVICES[@]}"; do
+            DOCKERFILE="${SERVICES[$SERVICE]}"
             
             # Build the image
             docker build \
-              -t "${{ secrets.DOCKER_USERNAME }}/${service}:latest" \
-              -t "${{ secrets.DOCKER_USERNAME }}/${service}:${COMMIT_SHORT_SHA}" \
-              -f "${dockerfile}" .
+              -t "${{ secrets.DOCKER_USERNAME }}/${SERVICE}:latest" \
+              -t "${{ secrets.DOCKER_USERNAME }}/${SERVICE}:${COMMIT_SHORT_SHA}" \
+              -f "${DOCKERFILE}" .
             
             # Push both tags
-            docker push "${{ secrets.DOCKER_USERNAME }}/${service}:latest"
-            docker push "${{ secrets.DOCKER_USERNAME }}/${service}:${COMMIT_SHORT_SHA}"
+            docker push "${{ secrets.DOCKER_USERNAME }}/${SERVICE}:latest"
+            docker push "${{ secrets.DOCKER_USERNAME }}/${SERVICE}:${COMMIT_SHORT_SHA}"
           done
       
       # Optional: Deploy to target environment
