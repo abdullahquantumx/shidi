@@ -31,6 +31,7 @@ func NewPostgresRepository(url string) (*postgresRepository, error) {
 
 func (r *postgresRepository) Close() {
 	r.db.Close()
+	
 }
 
 func (r *postgresRepository) PutAccount(ctx context.Context, account Account) error {
