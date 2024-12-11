@@ -4,7 +4,10 @@ on:
   push:
     branches:
       - main
+<<<<<<< HEAD
 
+=======
+>>>>>>> a2ae19579243066df92a2f7657e8f1d5b07ca94d
 
 jobs:
   deploy:
