@@ -28,7 +28,7 @@ jobs:
         context: .
         file: ./shopify/db.dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/shopify-db:latest  # Use the username from secrets
+        tags: ${{ secrets.DOCKER_USERNAME }}/shopify-db:latest  # Correct tag format
 
     - name: Build and push Shopify Service image
       uses: docker/build-push-action@v3
@@ -36,7 +36,7 @@ jobs:
         context: .
         file: ./shopify/app.dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/shopify-service:latest  # Use the username from secrets
+        tags: ${{ secrets.DOCKER_USERNAME }}/shopify-service:latest  # Correct tag format
 
     - name: Build and push GraphQL Service image
       uses: docker/build-push-action@v3
@@ -44,7 +44,7 @@ jobs:
         context: .
         file: ./graphql/app.dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/graphql-service:latest  # Use the username from secrets
+        tags: ${{ secrets.DOCKER_USERNAME }}/graphql-service:latest  # Correct tag format
 
     - name: Build and push Account DB image
       uses: docker/build-push-action@v3
@@ -52,7 +52,7 @@ jobs:
         context: .
         file: ./account/db.dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/account-db:latest  # Use the username from secrets
+        tags: ${{ secrets.DOCKER_USERNAME }}/account-db:latest  # Correct tag format
 
     - name: Build and push Account Service image
       uses: docker/build-push-action@v3
@@ -60,4 +60,4 @@ jobs:
         context: .
         file: ./account/app.dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/account-service:latest  # Use the username from secrets
+        tags: ${{ secrets.DOCKER_USERNAME }}/account-service:latest  # Correct tag format
