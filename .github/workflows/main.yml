@@ -20,16 +20,47 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Docker meta
-      id: docker-meta
+    - name: Generate Docker tags for Shopify DB
+      id: shopify-db-meta
       uses: docker/metadata-action@v5
       with:
-        images: |
-          ${{ secrets.DOCKER_USERNAME }}/shopify-db
-          ${{ secrets.DOCKER_USERNAME }}/shopify-service
-          ${{ secrets.DOCKER_USERNAME }}/graphql-service
-          ${{ secrets.DOCKER_USERNAME }}/account-db
-          ${{ secrets.DOCKER_USERNAME }}/account-service
+        images: ${{ secrets.DOCKER_USERNAME }}/shopify-db
+        tags: |
+          type=sha
+          type=raw,value=latest
+
+    - name: Generate Docker tags for Shopify Service
+      id: shopify-service-meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ secrets.DOCKER_USERNAME }}/shopify-service
+        tags: |
+          type=sha
+          type=raw,value=latest
+
+    - name: Generate Docker tags for GraphQL Service
+      id: graphql-service-meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ secrets.DOCKER_USERNAME }}/graphql-service
+        tags: |
+          type=sha
+          type=raw,value=latest
+
+    - name: Generate Docker tags for Account DB
+      id: account-db-meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ secrets.DOCKER_USERNAME }}/account-db
+        tags: |
+          type=sha
+          type=raw,value=latest
+
+    - name: Generate Docker tags for Account Service
+      id: account-service-meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ secrets.DOCKER_USERNAME }}/account-service
         tags: |
           type=sha
           type=raw,value=latest
@@ -40,8 +71,8 @@ jobs:
         context: .
         file: ./shopify/db.dockerfile
         push: true
-        tags: ${{ steps.docker-meta.outputs.tags }}
-        labels: ${{ steps.docker-meta.outputs.labels }}
+        tags: ${{ steps.shopify-db-meta.outputs.tags }}
+        labels: ${{ steps.shopify-db-meta.outputs.labels }}
 
     - name: Build and push Shopify Service image
       uses: docker/build-push-action@v5
@@ -49,8 +80,8 @@ jobs:
         context: .
         file: ./shopify/app.dockerfile
         push: true
-        tags: ${{ steps.docker-meta.outputs.tags }}
-        labels: ${{ steps.docker-meta.outputs.labels }}
+        tags: ${{ steps.shopify-service-meta.outputs.tags }}
+        labels: ${{ steps.shopify-service-meta.outputs.labels }}
 
     - name: Build and push GraphQL Service image
       uses: docker/build-push-action@v5
@@ -58,8 +89,8 @@ jobs:
         context: .
         file: ./graphql/app.dockerfile
         push: true
-        tags: ${{ steps.docker-meta.outputs.tags }}
-        labels: ${{ steps.docker-meta.outputs.labels }}
+        tags: ${{ steps.graphql-service-meta.outputs.tags }}
+        labels: ${{ steps.graphql-service-meta.outputs.labels }}
 
     - name: Build and push Account DB image
       uses: docker/build-push-action@v5
@@ -67,8 +98,8 @@ jobs:
         context: .
         file: ./account/db.dockerfile
         push: true
-        tags: ${{ steps.docker-meta.outputs.tags }}
-        labels: ${{ steps.docker-meta.outputs.labels }}
+        tags: ${{ steps.account-db-meta.outputs.tags }}
+        labels: ${{ steps.account-db-meta.outputs.labels }}
 
     - name: Build and push Account Service image
       uses: docker/build-push-action@v5
@@ -76,5 +107,5 @@ jobs:
         context: .
         file: ./account/app.dockerfile
         push: true
-        tags: ${{ steps.docker-meta.outputs.tags }}
-        labels: ${{ steps.docker-meta.outputs.labels }}
+        tags: ${{ steps.account-service-meta.outputs.tags }}
+        labels: ${{ steps.account-service-meta.outputs.labels }}
