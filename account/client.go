@@ -30,6 +30,7 @@ func NewClient(url string) (*Client, error) {
 
 func (c *Client) Close() {
 	c.conn.Close()
+	
 }
 
 func (c *Client) CreateAccount(ctx context.Context, a *Account) (*Account, error) {
