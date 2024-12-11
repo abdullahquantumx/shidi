@@ -13,6 +13,7 @@ import (
 type Client struct {
 	conn *grpc.ClientConn
 	service pb.AccountServiceClient
+	
 }
 
 func NewClient(url string) (*Client, error) {
