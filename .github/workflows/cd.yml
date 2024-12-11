@@ -12,6 +12,11 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Create Docker network (if not exists)
+        run: |
+          sudo docker network inspect logilo-network >/dev/null 2>&1 || \
+          sudo docker network create logilo-network
+          
       - name: Pull GraphQL Docker image
         run: sudo docker pull logilog/graphql:latest
       - name: Delete old GraphQL container
