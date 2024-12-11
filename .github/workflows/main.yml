@@ -26,7 +26,7 @@ jobs:
       run: |
         # Get short commit SHA
         SHORT_SHA=$(git rev-parse --short HEAD)
-        # Generate tags for each service
+        # Correctly format and export tags to GITHUB_ENV
         echo "shopify_db_tags=${{ secrets.DOCKER_USERNAME }}/shopify-db:latest,${{ secrets.DOCKER_USERNAME }}/shopify-db:${SHORT_SHA}" >> $GITHUB_ENV
         echo "shopify_service_tags=${{ secrets.DOCKER_USERNAME }}/shopify-service:latest,${{ secrets.DOCKER_USERNAME }}/shopify-service:${SHORT_SHA}" >> $GITHUB_ENV
         echo "graphql_service_tags=${{ secrets.DOCKER_USERNAME }}/graphql-service:latest,${{ secrets.DOCKER_USERNAME }}/graphql-service:${SHORT_SHA}" >> $GITHUB_ENV
