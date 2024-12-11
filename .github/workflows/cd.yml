@@ -2,9 +2,9 @@ name: CD Pipeline
 
 on:
   workflow_run:
-    workflows: ["CI Pipeline"]  # The name of the CI pipeline workflow
+    workflows: ["CI Pipeline"]
     types:
-      - completed  # Trigger when CI workflow completes
+      - completed
 
 jobs:
   deploy:
@@ -12,11 +12,11 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Pulls Docker image
+      - name: Pull GraphQL Docker image
         run: sudo docker pull logilog/graphql:latest
-      - name : Delete Old container
+      - name: Delete old GraphQL container
         run: sudo docker rm -f graphql-container || true
-      - name: run the container
+      - name: Run GraphQL container
         run: |
           sudo docker run -d \
             -p 8084:8084 \
@@ -26,48 +26,58 @@ jobs:
             -e SHOPFY_URL="http://shopify-service:8080" \
             logilog/graphql
 
-      - name: Pulls Docker image
+      - name: Pull Account DB Docker image
         run: sudo docker pull logilog/account-db:latest
-      - name : Delete Old container
+      - name: Delete old Account DB container
         run: sudo docker rm -f account-db-container || true
-      - name: run the container
+      - name: Run Account DB container
         run: |
           sudo docker run -d \
             -p 5432:5432 \
             --name account-db-container \
+            --network logilo-network \
             -e POSTGRES_USER="account_user_dev" \
             -e POSTGRES_PASSWORD="account_password_dev" \
             -e POSTGRES_DB="account_db_dev" \
             -v account_postgres_data:/var/lib/postgresql/data \
             logilog/account-db
 
-        
-      - name: Pulls Docker image
+      - name: Pull Shopify DB Docker image
         run: sudo docker pull logilog/shopify-db:latest
-      - name : Delete Old container
+      - name: Delete old Shopify DB container
         run: sudo docker rm -f shopify-db-container || true
-      - name: run the container
+      - name: Run Shopify DB container
         run: |
           sudo docker run -d \
-            -p 5432:5432 \
+            -p 5433:5432 \
             --name shopify-db-container \
+            --network logilo-network \
             -e POSTGRES_USER="shopify_user_dev" \
             -e POSTGRES_PASSWORD="shopify_password_dev" \
             -e POSTGRES_DB="shopify_db_dev" \
             -v shopify_postgres_data:/var/lib/postgresql/data \
             logilog/shopify-db
 
-        
-      - name: Pulls Docker image
+      - name: Pull Account Service Docker image
         run: sudo docker pull logilog/account-service:latest
-      - name : Delete Old container
+      - name: Delete old Account Service container
         run: sudo docker rm -f account-service-container || true
-      - name: run the container
-        run: sudo docker run -d -p 8081:8081 --name account-service-container logilog/account-service
+      - name: Run Account Service container
+        run: |
+          sudo docker run -d \
+            -p 8081:8081 \
+            --network logilo-network \
+            --name account-service-container \
+            logilog/account-service
 
-      - name: Pulls Docker image
+      - name: Pull Shopify Service Docker image
         run: sudo docker pull logilog/shopify-service:latest
-      - name : Delete Old container
+      - name: Delete old Shopify Service container
         run: sudo docker rm -f shopify-service-container || true
-      - name: run the container
-        run: sudo docker run -d -p 8080:8080 --name shopify-service-container logilog/shopify-service
+      - name: Run Shopify Service container
+        run: |
+          sudo docker run -d \
+            -p 8080:8080 \
+            --network logilo-network \
+            --name shopify-service-container \
+            logilog/shopify-service
