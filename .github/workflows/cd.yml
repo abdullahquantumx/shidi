@@ -73,6 +73,7 @@ jobs:
             -p 8081:8081 \
             --network logilo-network \
             --name account-service-container \
+            -e DATABASE_ACCOUNT_URL="postgres://account_user_dev:account_password_dev@account-db:5432/account_db_dev?sslmode=disable" \
             logilog/account-service
 
       - name: Pull Shopify Service Docker image
@@ -85,4 +86,5 @@ jobs:
             -p 8080:8080 \
             --network logilo-network \
             --name shopify-service-container \
+            -e DATABASE_SHOPIFY_URL="postgres://shopify_user_dev:shopify_password_dev@shopify-db:5432/shopify_db_dev?sslmode=disable" \
             logilog/shopify-service
