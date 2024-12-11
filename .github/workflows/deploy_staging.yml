@@ -3,7 +3,8 @@ name: Deploy to Staging
 on:
   push:
     branches:
-      - staging
+      - main
+
 
 jobs:
   deploy:
@@ -50,14 +51,3 @@ jobs:
           source: "./docker-compose.yml"  # Local docker-compose file
           target: "/path/to/your/remote/directory/docker-compose.yml"  # Remote directory to place it
 
-      # SSH into GCP instance and run docker-compose to deploy
-      - name: Deploy on GCP Instance
-        uses: appleboy/ssh-action@v0.1.4
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
-          script: |
-            cd /path/to/your/remote/directory
-            docker-compose pull  # Pull updated images from Docker Hub
-            docker-compose up -d  # Deploy containers in detached mode
