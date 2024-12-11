@@ -1,122 +1,31 @@
-name: CI/CD Pipeline
-
+name: pipeline
 on:
   push:
     branches:
-      - main  # Trigger the pipeline on push to the main branch
-
+      - 'main'
 jobs:
-  build:
+  deploy:
+    name: build && push image to docker hub
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
-    - name: Generate Docker tags for Shopify DB
-      id: shopify-db-meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ secrets.DOCKER_USERNAME }}/shopify-db
-        tags: |
-          type=sha
-          type=raw,value=latest
-
-    - name: Generate Docker tags for Shopify Service
-      id: shopify-service-meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ secrets.DOCKER_USERNAME }}/shopify-service
-        tags: |
-          type=sha
-          type=raw,value=latest
-
-    - name: Generate Docker tags for GraphQL Service
-      id: graphql-service-meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ secrets.DOCKER_USERNAME }}/graphql-service
-        tags: |
-          type=sha
-          type=raw,value=latest
-
-    - name: Generate Docker tags for Account DB
-      id: account-db-meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ secrets.DOCKER_USERNAME }}/account-db
-        tags: |
-          type=sha
-          type=raw,value=latest
-
-    - name: Generate Docker tags for Account Service
-      id: account-service-meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ secrets.DOCKER_USERNAME }}/account-service
-        tags: |
-          type=sha
-          type=raw,value=latest
-
-    - name: Build and push Shopify DB image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./shopify/db.dockerfile
-        push: true
-        tags: ${{ steps.shopify-db-meta.outputs.tags }}
-        labels: ${{ steps.shopify-db-meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    - name: Build and push Shopify Service image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./shopify/app.dockerfile
-        push: true
-        tags: ${{ steps.shopify-service-meta.outputs.tags }}
-        labels: ${{ steps.shopify-service-meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    - name: Build and push GraphQL Service image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./graphql/app.dockerfile
-        push: true
-        tags: ${{ steps.graphql-service-meta.outputs.tags }}
-        labels: ${{ steps.graphql-service-meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    - name: Build and push Account DB image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./account/db.dockerfile
-        push: true
-        tags: ${{ steps.account-db-meta.outputs.tags }}
-        labels: ${{ steps.account-db-meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    - name: Build and push Account Service image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./account/app.dockerfile
-        push: true
-        tags: ${{ steps.account-service-meta.outputs.tags }}
-        labels: ${{ steps.account-service-meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+    
+      - name: setup docker buildx
+        uses: docker/setup-buildx-action@v2
+    
+      - name: docker login
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      
+      - name: build and push api
+        id: build-push-api
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./graphql/app.dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/graphql:latest
