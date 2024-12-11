@@ -14,7 +14,6 @@ import (
 type grpcServer struct {
 	pb.UnimplementedAccountServiceServer
 	service Service
-	
 }
 
 func NewGRPCServer(service Service, port int) error {
