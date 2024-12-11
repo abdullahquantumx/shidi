@@ -1,4 +1,5 @@
 name: CI/CD Pipeline
+
 on:
   push:
     branches:
@@ -73,6 +74,8 @@ jobs:
         push: true
         tags: ${{ steps.shopify-db-meta.outputs.tags }}
         labels: ${{ steps.shopify-db-meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     - name: Build and push Shopify Service image
       uses: docker/build-push-action@v5
@@ -82,6 +85,8 @@ jobs:
         push: true
         tags: ${{ steps.shopify-service-meta.outputs.tags }}
         labels: ${{ steps.shopify-service-meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     - name: Build and push GraphQL Service image
       uses: docker/build-push-action@v5
@@ -91,6 +96,8 @@ jobs:
         push: true
         tags: ${{ steps.graphql-service-meta.outputs.tags }}
         labels: ${{ steps.graphql-service-meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     - name: Build and push Account DB image
       uses: docker/build-push-action@v5
@@ -100,6 +107,8 @@ jobs:
         push: true
         tags: ${{ steps.account-db-meta.outputs.tags }}
         labels: ${{ steps.account-db-meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     - name: Build and push Account Service image
       uses: docker/build-push-action@v5
@@ -109,3 +118,5 @@ jobs:
         push: true
         tags: ${{ steps.account-service-meta.outputs.tags }}
         labels: ${{ steps.account-service-meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
