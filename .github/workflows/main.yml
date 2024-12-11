@@ -28,4 +28,4 @@ jobs:
           context: .
           file: ./graphql/app.dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/graphql:latest
+          tags: logilog/graphql:latest
