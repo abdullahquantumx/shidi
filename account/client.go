@@ -13,6 +13,7 @@ import (
 type Client struct {
 	conn *grpc.ClientConn
 	service pb.AccountServiceClient
+	
 }
 
 func NewClient(url string) (*Client, error) {
@@ -21,8 +22,11 @@ func NewClient(url string) (*Client, error) {
 		return nil, err
 	}
 
+
 	c:= pb.NewAccountServiceClient(conn)
 	return &Client{conn: conn, service: c}, nil
+
+
 }
 
 func (c *Client) Close() {
@@ -33,6 +37,7 @@ func (c *Client) CreateAccount(ctx context.Context, a *Account) (*Account, error
 	res, err := c.service.CreateAccount(ctx, &pb.CreateAccountRequest{
 		Name: a.Name,
 	})
+	
 	if err != nil {
 		log.Printf("Error creating account: %v", err)
 		return nil, err
