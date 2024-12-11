@@ -1,8 +1,10 @@
 name: CI/CD Pipeline
+
 on:
   push:
     branches:
       - main  # Trigger the pipeline on push to the main branch
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,12 +26,12 @@ jobs:
       run: |
         # Get short commit SHA
         SHORT_SHA=$(git rev-parse --short HEAD)
-        # Echo tags for each service
-        echo "shopify_db_tags=${{ secrets.DOCKER_USERNAME }}/shopify-db:latest,${{ secrets.DOCKER_USERNAME }}/shopify-db:$SHORT_SHA" >> $GITHUB_OUTPUT
-        echo "shopify_service_tags=${{ secrets.DOCKER_USERNAME }}/shopify-service:latest,${{ secrets.DOCKER_USERNAME }}/shopify-service:$SHORT_SHA" >> $GITHUB_OUTPUT
-        echo "graphql_service_tags=${{ secrets.DOCKER_USERNAME }}/graphql-service:latest,${{ secrets.DOCKER_USERNAME }}/graphql-service:$SHORT_SHA" >> $GITHUB_OUTPUT
-        echo "account_db_tags=${{ secrets.DOCKER_USERNAME }}/account-db:latest,${{ secrets.DOCKER_USERNAME }}/account-db:$SHORT_SHA" >> $GITHUB_OUTPUT
-        echo "account_service_tags=${{ secrets.DOCKER_USERNAME }}/account-service:latest,${{ secrets.DOCKER_USERNAME }}/account-service:$SHORT_SHA" >> $GITHUB_OUTPUT
+        # Generate tags for each service
+        echo "shopify_db_tags=${{ secrets.DOCKER_USERNAME }}/shopify-db:latest,${{ secrets.DOCKER_USERNAME }}/shopify-db:${SHORT_SHA}" >> $GITHUB_ENV
+        echo "shopify_service_tags=${{ secrets.DOCKER_USERNAME }}/shopify-service:latest,${{ secrets.DOCKER_USERNAME }}/shopify-service:${SHORT_SHA}" >> $GITHUB_ENV
+        echo "graphql_service_tags=${{ secrets.DOCKER_USERNAME }}/graphql-service:latest,${{ secrets.DOCKER_USERNAME }}/graphql-service:${SHORT_SHA}" >> $GITHUB_ENV
+        echo "account_db_tags=${{ secrets.DOCKER_USERNAME }}/account-db:latest,${{ secrets.DOCKER_USERNAME }}/account-db:${SHORT_SHA}" >> $GITHUB_ENV
+        echo "account_service_tags=${{ secrets.DOCKER_USERNAME }}/account-service:latest,${{ secrets.DOCKER_USERNAME }}/account-service:${SHORT_SHA}" >> $GITHUB_ENV
 
     - name: Build and push Shopify DB image
       uses: docker/build-push-action@v5
@@ -37,7 +39,7 @@ jobs:
         context: .
         file: ./shopify/db.dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.shopify_db_tags }}
+        tags: ${{ env.shopify_db_tags }}
 
     - name: Build and push Shopify Service image
       uses: docker/build-push-action@v5
@@ -45,7 +47,7 @@ jobs:
         context: .
         file: ./shopify/app.dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.shopify_service_tags }}
+        tags: ${{ env.shopify_service_tags }}
 
     - name: Build and push GraphQL Service image
       uses: docker/build-push-action@v5
@@ -53,7 +55,7 @@ jobs:
         context: .
         file: ./graphql/app.dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.graphql_service_tags }}
+        tags: ${{ env.graphql_service_tags }}
 
     - name: Build and push Account DB image
       uses: docker/build-push-action@v5
@@ -61,7 +63,7 @@ jobs:
         context: .
         file: ./account/db.dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.account_db_tags }}
+        tags: ${{ env.account_db_tags }}
 
     - name: Build and push Account Service image
       uses: docker/build-push-action@v5
@@ -69,4 +71,4 @@ jobs:
         context: .
         file: ./account/app.dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.account_service_tags }}
+        tags: ${{ env.account_service_tags }}
