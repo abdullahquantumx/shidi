@@ -28,7 +28,7 @@ jobs:
             --name graphql-container \
             --network logilo-network \
             -e ACCOUNT_URL="http://account-service:8081" \
-            -e SHOPFY_URL="http://shopify-service:8080" \
+            -e SHOPIFY_URL="http://shopify-service:8080" \
             logilog/graphql
 
       - name: Pull Account DB Docker image
