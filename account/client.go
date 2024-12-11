@@ -13,7 +13,6 @@ import (
 type Client struct {
 	conn *grpc.ClientConn
 	service pb.AccountServiceClient
-	
 
 }
 
