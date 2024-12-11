@@ -2,52 +2,67 @@ name: Docker Compose CI/CD
 
 on:
   push:
-    branches: 
+    branches:
       - main
 
 jobs:
-
   deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
-    # Checkout the repository
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    # Log in to Docker Hub (if needed for deployment)
-    - name: Log in to Docker Hub
-      env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      run: echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
       
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-
-    - name: Set up Docker Compose
-      run: |
-        sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
-
-    # Build the Docker images using docker-compose
-    - name: Build Docker Compose Services
-      run: |
-        docker-compose -f docker-compose.yaml build
-
-    # Tag and push the images to Docker Hub
-    - name: Build and Push Docker Compose Services
-      run: |
-        services=$(docker-compose -f docker-compose.yaml config --services)
-        for service in $services; do
-          # Tag each service image with the Docker Hub username
-          docker tag $service:latest ${{ secrets.DOCKER_USERNAME }}/$service:latest
-          # Push the tagged image to Docker Hub
-          docker push ${{ secrets.DOCKER_USERNAME }}/$service:latest
-        done
-
-    # Deploy the services using docker-compose
-    - name: Deploy Services
-      run: |
-        docker-compose -f docker-compose.yaml pull
-        docker-compose -f docker-compose.yaml up -d --remove-orphans
+      # Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      # Set up Docker Buildx for improved build capabilities
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      # Build and push each service
+      - name: Build and Push Docker Services
+        run: |
+          # List of services to build and push
+          services=(
+            "shopify-db:./shopify/db.dockerfile"
+            "shopify-service:./shopify/app.dockerfile"
+            "graphql-service:./graphql/app.dockerfile"
+            "account-db:./account/db.dockerfile"
+            "account-service:./account/app.dockerfile"
+          )
+          
+          # Get current git commit short hash for tagging
+          COMMIT_SHORT_SHA=$(git rev-parse --short HEAD)
+          
+          # Build and push each service
+          for service_info in "${services[@]}"; do
+            # Split service name and dockerfile path
+            IFS=':' read -r service dockerfile <<< "$service_info"
+            
+            # Build the image
+            docker build \
+              -t "${{ secrets.DOCKER_USERNAME }}/${service}:latest" \
+              -t "${{ secrets.DOCKER_USERNAME }}/${service}:${COMMIT_SHORT_SHA}" \
+              -f "${dockerfile}" .
+            
+            # Push both tags
+            docker push "${{ secrets.DOCKER_USERNAME }}/${service}:latest"
+            docker push "${{ secrets.DOCKER_USERNAME }}/${service}:${COMMIT_SHORT_SHA}"
+          done
+      
+      # Optional: Deploy to target environment
+      - name: Deploy Services
+        run: |
+          # Pull the latest images
+          docker-compose -f docker-compose.yaml pull
+          
+          # Restart services with the new images
+          docker-compose -f docker-compose.yaml up -d --remove-orphans
+        # Note: Only uncomment if you want automatic deployment
+        # if: github.ref == 'refs/heads/main'
