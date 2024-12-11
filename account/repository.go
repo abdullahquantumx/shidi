@@ -15,6 +15,7 @@ type Repository interface {
 
 type postgresRepository struct {
 	db *sql.DB
+	
 }
 
 func NewPostgresRepository(url string) (*postgresRepository, error) {
