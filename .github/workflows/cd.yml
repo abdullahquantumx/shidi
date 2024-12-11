@@ -17,14 +17,29 @@ jobs:
       - name : Delete Old container
         run: sudo docker rm -f graphql-container || true
       - name: run the container
-        run: sudo docker run -d -p 8084:8084 --name graphql-container logilog/graphql
+        run: |
+          sudo docker run -d \
+            -p 8084:8084 \
+            --name graphql-container \
+            --network logilo-network \
+            -e ACCOUNT_URL="http://account-service:8081" \
+            -e SHOPFY_URL="http://shopify-service:8080" \
+            logilog/graphql
 
       - name: Pulls Docker image
         run: sudo docker pull logilog/account-db:latest
       - name : Delete Old container
         run: sudo docker rm -f account-db-container || true
       - name: run the container
-        run: sudo docker run -d -p 5432:5432 --name account-db-container logilog/account-db
+        run: |
+          sudo docker run -d \
+            -p 5432:5432 \
+            --name account-db-container \
+            -e POSTGRES_USER="account_user_dev" \
+            -e POSTGRES_PASSWORD="account_password_dev" \
+            -e POSTGRES_DB="account_db_dev" \
+            -v account_postgres_data:/var/lib/postgresql/data \
+            logilog/account-db
 
         
       - name: Pulls Docker image
@@ -32,7 +47,15 @@ jobs:
       - name : Delete Old container
         run: sudo docker rm -f shopify-db-container || true
       - name: run the container
-        run: sudo docker run -d -p 5432:5432 --name shopify-db-container logilog/shopify-db
+        run: |
+          sudo docker run -d \
+            -p 5432:5432 \
+            --name shopify-db-container \
+            -e POSTGRES_USER="shopify_user_dev" \
+            -e POSTGRES_PASSWORD="shopify_password_dev" \
+            -e POSTGRES_DB="shopify_db_dev" \
+            -v shopify_postgres_data:/var/lib/postgresql/data \
+            logilog/shopify-db
 
         
       - name: Pulls Docker image
