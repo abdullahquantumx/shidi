@@ -17,7 +17,6 @@ func (r *accountResolver) Orders(ctx context.Context, obj *models.Account) ([]*O
 	res, err := r.server.shopifyClient.GetOrdersForShopAndAccount(ctx, obj.ShopName, obj.ID)
 	if err != nil {
 		return nil, err
-		
 	}
 	orders := make([]*Order, len(res))
 	for i, order := range res {
