@@ -13,7 +13,7 @@ import (
 type AppConfig struct {
 	AccountURL string `envconfig:"ACCOUNT_URL" required:"true"`
 	ShopifyURL string `envconfig:"SHOPIFY_URL" required:"true"`
-	Port       string `envconfig:"PORT" default:"8084"` // Added configurable port
+	Port       string `envconfig:"PORT" default:"8084"` 
 }
 
 // healthHandler responds with HTTP 200 for health checks
